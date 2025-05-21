@@ -14,6 +14,7 @@ from stashbus.mqtt_publishers import get_key
 @click.option("--mqtt_ca_certs", default=None)
 @click.option("--mqtt_certfile", default=None)
 @click.option("--mqtt_keyfile", default=None)
+@click.option("--stashrest_url", default=None)
 @click.pass_context
 def stashbus(
     ctx: click.Context,
@@ -22,6 +23,7 @@ def stashbus(
     mqtt_ca_certs: str | None,
     mqtt_certfile: str | None,
     mqtt_keyfile: str | None,
+    stashrest_url: str | None,
 ):
     ctx.ensure_object(dict)
     ctx.obj["mqtt_host"] = mqtt_host
@@ -29,6 +31,7 @@ def stashbus(
     ctx.obj["mqtt_ca_certs"] = mqtt_ca_certs
     ctx.obj["mqtt_certfile"] = mqtt_certfile
     ctx.obj["mqtt_keyfile"] = mqtt_keyfile
+    ctx.obj["stashrest_url"] = stashrest_url
 
 
 @stashbus.command()
@@ -42,6 +45,7 @@ def cryptocurrency(ctx: click.Context):
         ctx.obj["mqtt_keyfile"],
         "stashbus/prices/btc_usd",
         5.0,
+        ctx.obj["stashrest_url"],
         Currency.BTC,
         Currency.USD,
         get_key("coindesk-api-key"),
@@ -59,6 +63,7 @@ def weather(ctx: click.Context):
         ctx.obj["mqtt_keyfile"],
         "stashbus/weather/brno",
         60,
+        ctx.obj["stashrest_url"],
         *BRNO_LAT_LON,
         get_key("openweathermap-api-key"),
     ).run()

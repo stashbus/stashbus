@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-vel#yhz1nmu_(-antv$73jmua@uj6!z6of1mt-!8w6w)0mi8^d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["web", "localhost"]
 
 
 # Application definition
@@ -76,6 +76,14 @@ WSGI_APPLICATION = "stashbus_web.wsgi.application"
 
 DATABASES = {
     "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "stashbus",
+        "USER": "postgres",
+        "PASSWORD": "example",
+        "HOST": "postgres",
+        "PORT": "5432",
+    },
+    "testing": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     },

@@ -1,7 +1,7 @@
 import httpx
 from abc import ABC, abstractmethod
 
-from typing import TypeVar, Generic, Any
+from typing import TypeVar, Generic, Any, Callable, Dict
 import paho.mqtt.client as mqtt
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
@@ -12,7 +12,7 @@ from time import sleep
 import ssl
 import threading
 from stashbus.db_models import Payload
-
+from stashbus.rest_models import DataProducer, Command
 
 logging.basicConfig(level=logging.INFO)
 
@@ -42,6 +42,7 @@ class RESTPublisher(ABC, Generic[T]):
     keyfile: str | None = field()
     topic: str = field()
     period: float = field()
+    stashrest_url: str = field()
     mqtt_cli: mqtt.Client = field(init=False)
     http_cli: httpx.Client = field(init=False)
     do_work: threading.Event = field(init=False)
@@ -50,6 +51,10 @@ class RESTPublisher(ABC, Generic[T]):
         self.init_mqtt_client()
         self.http_cli = httpx.Client()
         self.do_work = threading.Event()
+        self.cmd_map: Dict[Command, Callable[[], None]] = {
+            Command.PRODUCE: self.produce,
+            Command.STOP: self.noop,
+        }
 
     def init_mqtt_client(self):
         logging.info(f"Starting.")
@@ -62,6 +67,18 @@ class RESTPublisher(ABC, Generic[T]):
         if self.ca_certs:
             self.mqtt_cli.tls_set(self.ca_certs, certfile=self.certfile, keyfile=self.keyfile, cert_reqs=ssl.CERT_REQUIRED)  # type: ignore
         self.mqtt_cli.connect_async(self.mqtt_host, self.mqtt_port)
+
+    def produce(self):
+        data = self.get_data()
+        payload = self.parse_data(data)
+        self.publish(payload)
+
+    def noop(self):
+        pass
+
+    def dispatch(self, command: Command) -> Callable[[], None]:
+        action = self.cmd_map[command]
+        return action
 
     @property
     @abstractmethod
@@ -133,16 +150,17 @@ class RESTPublisher(ABC, Generic[T]):
         logging.info(f"Socket {socket} will be closed.")
         self.do_work.clear()
 
-    def cycle(self):
-        data = self.get_data()
-        payload = self.parse_data(data)
-        self.publish(payload)
-
     def run(self):
         self.mqtt_cli.loop_start()
 
         while True:
             logging.debug("Waiting for do_work condition.")
             self.do_work.wait()
-            self.cycle()
+            try:
+                command = DataProducer.model_validate_json(
+                    self.http_cli.get(self.stashrest_url).text
+                ).command
+                self.dispatch(command)()
+            except Exception as exc:
+                logging.error(exc)
             sleep(self.period)

@@ -7,6 +7,7 @@ from rest_framework import permissions, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.decorators import action
 
 from stashrest.serializers import (
     DataProducerSerializer,
@@ -15,9 +16,14 @@ from stashrest.serializers import (
     UserSerializer,
 )
 from stashrest.mongo import brno_weather, btc_prices
-from stashrest.models import OWMPayload, Message
+from stashrest.models import OWMPayload, Message, DataProducer
 
 from typing import Dict, List, Any
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DataProducerViewSet(viewsets.ModelViewSet):
@@ -27,7 +33,23 @@ class DataProducerViewSet(viewsets.ModelViewSet):
 
     queryset = DataProducer.objects.all()
     serializer_class = DataProducerSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+
+    @action(detail=True, methods=["post"])
+    def stop(self, request, pk=None):
+        logger.debug(f"Stopping DataProducer with pk={pk}")
+        data_producer: DataProducer = self.get_object()
+        data_producer.command = DataProducer.Command.STOP
+        data_producer.save()
+        return Response({"status": "OK"})
+
+    @action(detail=True, methods=["post"])
+    def produce(self, request, pk=None):
+        logger.debug(f"Stopping DataProducer with pk={pk}")
+        data_producer: DataProducer = self.get_object()
+        data_producer.command = DataProducer.Command.PRODUCE
+        data_producer.save()
+        return Response({"status": "OK"})
 
 
 class SecretViewSet(viewsets.ModelViewSet):

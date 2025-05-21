@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group, User
 from rest_framework import serializers
-from stashrest.models import DataProducer, Secret
+from stashrest.models import DataProducer, Secret, OWMPayload
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

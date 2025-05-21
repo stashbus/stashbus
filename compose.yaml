@@ -74,6 +74,7 @@ services:
                '--mqtt_ca_certs', '/ca.sscrt',
                '--mqtt_certfile', '/publisher-brno-weather.client.crt',
                '--mqtt_keyfile', '/run/secrets/publisher-brno-weather-client-key',
+               '--stashrest_url', 'http://web:8000/data_producers/1/',
                'weather' ]
     build:
       target: stashbus_mqtt_publisher
@@ -93,6 +94,7 @@ services:
                '--mqtt_ca_certs', '/ca.sscrt',
                '--mqtt_certfile', '/publisher-crypto.client.crt',
                '--mqtt_keyfile', '/run/secrets/publisher-crypto-client-key',
+               '--stashrest_url', 'http://web:8000/data_producers/2/',
                'cryptocurrency' ]
     build:
       target:  stashbus_mqtt_publisher

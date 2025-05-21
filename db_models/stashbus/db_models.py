@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from decimal import Decimal
 from enum import StrEnum, auto
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 
 class Currency(StrEnum):
