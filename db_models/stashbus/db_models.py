@@ -12,6 +12,12 @@ class Currency(StrEnum):
 
 class Price(BaseModel):
     USD: Decimal
+    EUR: Decimal
+    GBP: Decimal
+    CAD: Decimal
+    CHF: Decimal
+    AUD: Decimal
+    JPY: Decimal
 
 
 class Payload(BaseModel):

@@ -12,22 +12,15 @@ from time import sleep
 import ssl
 import threading
 from stashbus.db_models import Payload
+from stashbus.http_common import (
+    StashbusError,
+    CryptoCompareClient,
+    DataClient,
+    StashRESTClient,
+)
 from stashbus.rest_models import DataProducer, Command
 
 logging.basicConfig(level=logging.INFO)
-
-
-def get_key(keyname: str) -> str:
-    with open(f"/run/secrets/{keyname}", "r") as file:
-        return file.read()
-
-
-class StashbusError(Exception):
-    pass
-
-
-class NoAuth(httpx.Auth):
-    pass
 
 
 T = TypeVar("T", bound=Payload)
@@ -42,14 +35,13 @@ class RESTPublisher(ABC, Generic[T]):
     keyfile: str | None = field()
     topic: str = field()
     period: float = field()
-    stashrest_url: str = field()
+    data_client: DataClient[T] = field()
+    stashrest_client: StashRESTClient = field()
     mqtt_cli: mqtt.Client = field(init=False)
-    http_cli: httpx.Client = field(init=False)
     do_work: threading.Event = field(init=False)
 
     def __post_init__(self):
         self.init_mqtt_client()
-        self.http_cli = httpx.Client()
         self.do_work = threading.Event()
         self.cmd_map: Dict[Command, Callable[[], None]] = {
             Command.PRODUCE: self.produce,
@@ -69,8 +61,7 @@ class RESTPublisher(ABC, Generic[T]):
         self.mqtt_cli.connect_async(self.mqtt_host, self.mqtt_port)
 
     def produce(self):
-        data = self.get_data()
-        payload = self.parse_data(data)
+        payload = self.data_client.get_data()
         self.publish(payload)
 
     def noop(self):
@@ -79,29 +70,6 @@ class RESTPublisher(ABC, Generic[T]):
     def dispatch(self, command: Command) -> Callable[[], None]:
         action = self.cmd_map[command]
         return action
-
-    @property
-    @abstractmethod
-    def url(self) -> str:
-        pass
-
-    @property
-    def auth(self) -> httpx.Auth | None:
-        return None
-
-    def get_data(self):
-        response = self.http_cli.get(self.url, auth=self.auth)
-        try:
-            response.raise_for_status()
-        except Exception as err:
-            new_exc = StashbusError(f"{err} {response.text}")
-            raise new_exc from err
-        else:
-            return response.text
-
-    @abstractmethod
-    def parse_data(self, data: str) -> T:
-        pass
 
     def publish(self, payload: T):
         logging.info(f"Publishing {payload}.")
@@ -157,9 +125,7 @@ class RESTPublisher(ABC, Generic[T]):
             logging.debug("Waiting for do_work condition.")
             self.do_work.wait()
             try:
-                command = DataProducer.model_validate_json(
-                    self.http_cli.get(self.stashrest_url).text
-                ).command
+                command = self.stashrest_client.current_command()
                 self.dispatch(command)()
             except Exception as exc:
                 logging.error(exc)

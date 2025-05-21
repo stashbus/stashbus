@@ -49,6 +49,12 @@ services:
       - ./certs/mosquitto.server.crt:/mosquitto/config/server.crt:ro,z
     secrets:
       - mosquitto-server-key
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo | nc -w 2 localhost 1883 > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 
   stasher-mqtt:
     image: stashbus_mqtt_stasher
@@ -66,15 +72,22 @@ services:
       - ./certs/stasher-mqtt.client.crt:/stasher-mqtt.client.crt:ro,z
     secrets:
       - stasher-mqtt-client-key
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      web:
+        condition: service_healthy
 
   publisher-brno-weather:
     image: stashbus_mqtt_publisher
-    command: [ '--mqtt_host', 'mqtt-broker',
+    command: [
+               '--stashrest_url', 'http://web:8000',
+               '--producer_id', '1',
+               '--mqtt_host', 'mqtt-broker',
                '--mqtt_port', '1883',
                '--mqtt_ca_certs', '/ca.sscrt',
                '--mqtt_certfile', '/publisher-brno-weather.client.crt',
                '--mqtt_keyfile', '/run/secrets/publisher-brno-weather-client-key',
-               '--stashrest_url', 'http://web:8000/data_producers/1/',
                'weather' ]
     build:
       target: stashbus_mqtt_publisher
@@ -85,16 +98,22 @@ services:
     secrets:
       - publisher-brno-weather-client-key
       - openweathermap-api-key
-
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      web:
+        condition: service_healthy
 
   publisher-crypto:
     image: stashbus_mqtt_publisher
-    command: [ '--mqtt_host', 'mqtt-broker',
+    command: [
+               '--stashrest_url', 'http://web:8000',
+               '--producer_id', '2',
+               '--mqtt_host', 'mqtt-broker',
                '--mqtt_port', '1883',
                '--mqtt_ca_certs', '/ca.sscrt',
                '--mqtt_certfile', '/publisher-crypto.client.crt',
                '--mqtt_keyfile', '/run/secrets/publisher-crypto-client-key',
-               '--stashrest_url', 'http://web:8000/data_producers/2/',
                'cryptocurrency' ]
     build:
       target:  stashbus_mqtt_publisher
@@ -105,7 +124,11 @@ services:
     secrets:
       - publisher-crypto-client-key
       - coindesk-api-key
-
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      web:
+        condition: service_healthy
   web:
     image: stashbus_web
     build:
@@ -116,7 +139,11 @@ services:
       - PYTHONUNBUFFERED=1
     ports:
       - 8000:8000
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://web:8000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 secrets:
   postgres-passwd:

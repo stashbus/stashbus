@@ -1,29 +1,34 @@
 import click
 from stashbus.db_models import Currency
-from stashbus.mqtt_publishers.cryptocompare_mqtt_publisher import CryptoComparePublisher
-from stashbus.mqtt_publishers.openweathermap_mqtt_publisher import (
-    OWMPublisher,
-    BRNO_LAT_LON,
+from stashbus.http_common import (
+    CryptoCompareClient,
+    OWMClient,
+    StashRESTClient,
+    Mempool,
 )
-from stashbus.mqtt_publishers import get_key
+from stashbus.mqtt_publishers import RESTPublisher
+
+BRNO_LAT_LON = 49.19522000, 16.60796000
 
 
 @click.group()
+@click.option("--stashrest_url")
+@click.option("--producer_id")
 @click.option("--mqtt_host", default="mqtt-broker")
 @click.option("--mqtt_port", default=1883)
 @click.option("--mqtt_ca_certs", default=None)
 @click.option("--mqtt_certfile", default=None)
 @click.option("--mqtt_keyfile", default=None)
-@click.option("--stashrest_url", default=None)
 @click.pass_context
 def stashbus(
     ctx: click.Context,
+    stashrest_url: str | None,
+    producer_id: int | None,
     mqtt_host: str,
     mqtt_port: int,
     mqtt_ca_certs: str | None,
     mqtt_certfile: str | None,
     mqtt_keyfile: str | None,
-    stashrest_url: str | None,
 ):
     ctx.ensure_object(dict)
     ctx.obj["mqtt_host"] = mqtt_host
@@ -31,31 +36,35 @@ def stashbus(
     ctx.obj["mqtt_ca_certs"] = mqtt_ca_certs
     ctx.obj["mqtt_certfile"] = mqtt_certfile
     ctx.obj["mqtt_keyfile"] = mqtt_keyfile
+    ctx.obj["producer_id"] = producer_id
     ctx.obj["stashrest_url"] = stashrest_url
 
 
 @stashbus.command()
 @click.pass_context
 def cryptocurrency(ctx: click.Context):
-    CryptoComparePublisher(
+    stashrest_cli = StashRESTClient(ctx.obj["producer_id"], ctx.obj["stashrest_url"])
+
+    RESTPublisher(
         ctx.obj["mqtt_host"],
         ctx.obj["mqtt_port"],
         ctx.obj["mqtt_ca_certs"],
         ctx.obj["mqtt_certfile"],
         ctx.obj["mqtt_keyfile"],
         "stashbus/prices/btc_usd",
-        5.0,
-        ctx.obj["stashrest_url"],
-        Currency.BTC,
-        Currency.USD,
-        get_key("coindesk-api-key"),
+        15.0,
+        # CryptoCompareClient(Currency.BTC, Currency.USD, stashrest_cli.secret("coindesk-api-key")),
+        Mempool(),
+        stashrest_cli,
     ).run()
 
 
 @stashbus.command()
 @click.pass_context
 def weather(ctx: click.Context):
-    OWMPublisher(
+    stashrest_cli = StashRESTClient(ctx.obj["producer_id"], ctx.obj["stashrest_url"])
+
+    RESTPublisher(
         ctx.obj["mqtt_host"],
         ctx.obj["mqtt_port"],
         ctx.obj["mqtt_ca_certs"],
@@ -63,7 +72,6 @@ def weather(ctx: click.Context):
         ctx.obj["mqtt_keyfile"],
         "stashbus/weather/brno",
         60,
-        ctx.obj["stashrest_url"],
-        *BRNO_LAT_LON,
-        get_key("openweathermap-api-key"),
+        OWMClient(*BRNO_LAT_LON, stashrest_cli.secret("openweathermap-api-key")),
+        stashrest_cli,
     ).run()
