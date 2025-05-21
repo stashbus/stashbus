@@ -16,14 +16,14 @@ all: ca.sscrt \
 	openssl req -new -key $*.server.key -out $@ -config $<
 
 %.server.crt: %.server.csr %.server.cnf ca.sscrt ca.key
-	openssl x509 -req -in $< -CA ca.sscrt -CAkey ca.key -out $@ -CAcreateserial -days 1 -sha256 -extfile $*.server.cnf
+	openssl x509 -req -in $< -CA ca.sscrt -CAkey ca.key -out $@ -CAcreateserial -days 365 -sha256 -extfile $*.server.cnf
 
 # CA signed client certs.
 %.client.csr: %.client.answ %.client.key
 	openssl req -new -key $*.client.key -out $@ -config $<
 
 %.client.crt: %.client.csr %.client.cnf ca.sscrt ca.key
-	openssl x509 -req -in $< -CA ca.sscrt -CAkey ca.key -out $@ -CAcreateserial -days 1 -sha256 -extfile $*.client.cnf
+	openssl x509 -req -in $< -CA ca.sscrt -CAkey ca.key -out $@ -CAcreateserial -days 365 -sha256 -extfile $*.client.cnf
 
 
 # Cleanup
