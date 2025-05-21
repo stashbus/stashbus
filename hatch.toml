@@ -1,0 +1,13 @@
+[tool.hatch.envs.default]
+dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.workspace]
+members = [
+  "mqtt_publishers",
+  "mqtt_stasher",
+  "common",
+  "web"
+]

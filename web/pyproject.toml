@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stashbus-web"
+version = "0.1.0"
+dependencies = [
+  "pydantic >= 2.0",
+  "httpx>=0.28.1",
+  "paho-mqtt",
+  "click>=8.2.0",
+  "Django>=5.2.1",
+  "djangorestframework",
+  "markdown",
+  "django-filter",
+  "psycopg2-binary",
+  "stashbus-db-models",
+  "pymongo==4.13.0",
+  "mongoengine==0.29.1"
+
+]
+requires-python = ">=3.12"
+authors = [
+  {name = "Jaroslav Henner", email = "jaroslav.henner@gmail.com"},
+]
+maintainers = [
+  {name = "Jaroslav Henner", email = "jaroslav.henner@gmail.com"}
+]
+description = "MQTT and MODBus stashing system"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICEN[CS]E.*"]
+keywords = ["bus", "logging"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: Log Analysis",
+    "Topic :: Internet :: WWW/HTTP",
+]
+
+[project.optional-dependencies]
+test = [
+  "py >= 1.11.0",
+  "docker >= 7.1.0",
+  "black >= 25.1.0",
+  "pre-commit >= 4.2.0",
+  "pytest-doctestplus==1.4.0",
+
+]
+dev = [
+  "mypy >= 1.15.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jarovo/stashbus/"
+Repository = "https://github.com/jarovo/stashbus_mqtt_publisher/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["stashbus"]
+
+
+[tool.pytest.ini_options]
+#addopts = "--doctest-plus --doctest-modules --doctest-glob='*.md'"

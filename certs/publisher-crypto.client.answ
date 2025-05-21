@@ -1,0 +1,19 @@
+
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+prompt = no
+
+[req_distinguished_name]
+C   = CZ
+ST  = .
+L   = Brno
+O   = Easycon
+OU  = R&D
+CN  = publisher-crypto
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = publisher-crypto

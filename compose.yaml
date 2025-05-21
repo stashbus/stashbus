@@ -1,0 +1,140 @@
+services:
+  postgres:
+    image: postgres:17.5
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD_FILE=/run/secrets/postgres-passwd
+    volumes:
+      - "$PWD/data/postgresql:/var/lib/postgresql/data:z"
+    secrets:
+      - postgres-passwd
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  mongo:
+    image: mongodb/mongodb-community-server:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_BASICAUTH: false
+
+  mqtt-broker:
+    image: "eclipse-mosquitto"
+    ports: "1883:1883"
+    volumes:
+      - "./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:z,ro"
+      - "/mosquitto/data"
+      - "./log:/mosquitto/log:z"
+      - ./certs/ca.sscrt:/mosquitto/config/ca.sscrt:ro,z
+      - ./certs/mosquitto.server.crt:/mosquitto/config/server.crt:ro,z
+    secrets:
+      - mosquitto-server-key
+
+  stasher-mqtt:
+    image: stashbus_mqtt_stasher
+    command: [ '--mqtt_host', 'mqtt-broker',
+               '--mqtt_port', '1883',
+               '--mqtt_ca_certs', '/ca.sscrt',
+               '--mqtt_certfile', '/stasher-mqtt.client.crt',
+               '--mqtt_keyfile', '/run/secrets/stasher-mqtt-client-key',
+                ]
+    build:
+      target: stashbus_mqtt_stasher
+    volumes:
+      - .:/src/stashbus:ro,z
+      - ./certs/ca.sscrt:/ca.sscrt:ro,z
+      - ./certs/stasher-mqtt.client.crt:/stasher-mqtt.client.crt:ro,z
+    secrets:
+      - stasher-mqtt-client-key
+
+  publisher-brno-weather:
+    image: stashbus_mqtt_publisher
+    command: [ '--mqtt_host', 'mqtt-broker',
+               '--mqtt_port', '1883',
+               '--mqtt_ca_certs', '/ca.sscrt',
+               '--mqtt_certfile', '/publisher-brno-weather.client.crt',
+               '--mqtt_keyfile', '/run/secrets/publisher-brno-weather-client-key',
+               'weather' ]
+    build:
+      target: stashbus_mqtt_publisher
+    volumes:
+      - .:/src/stashbus:ro,z
+      - ./certs/ca.sscrt:/ca.sscrt:ro,z
+      - ./certs/publisher-brno-weather.client.crt:/publisher-brno-weather.client.crt:ro,z
+    secrets:
+      - publisher-brno-weather-client-key
+      - openweathermap-api-key
+
+
+  publisher-crypto:
+    image: stashbus_mqtt_publisher
+    command: [ '--mqtt_host', 'mqtt-broker',
+               '--mqtt_port', '1883',
+               '--mqtt_ca_certs', '/ca.sscrt',
+               '--mqtt_certfile', '/publisher-crypto.client.crt',
+               '--mqtt_keyfile', '/run/secrets/publisher-crypto-client-key',
+               'cryptocurrency' ]
+    build:
+      target:  stashbus_mqtt_publisher
+    volumes:
+      - .:/src/stashbus:ro,z
+      - ./certs/ca.sscrt:/ca.sscrt:ro,z
+      - ./certs/publisher-crypto.client.crt:/publisher-crypto.client.crt:ro,z
+    secrets:
+      - publisher-crypto-client-key
+      - coindesk-api-key
+
+  web:
+    image: stashbus_web
+    build:
+      target:  stashbus_web
+    volumes:
+      - .:/src/stashbus:ro,z
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - 8000:8000
+
+
+secrets:
+  postgres-passwd:
+    file: secrets/posgres-passwd.txt
+    relabel: z
+  openweathermap-api-key:
+    file: secrets/openweathermap-api-key.txt
+    relabel: z
+  coindesk-api-key:
+    file: secrets/coindesk-api-key.txt
+    relabel: z
+  mosquitto-server-key:
+    file: certs/mosquitto.server.key
+    relabel: z
+  stasher-mqtt-client-key:
+    file: certs/stasher-mqtt.client.key
+    relabel: z
+  publisher-brno-weather-client-key:
+    file: certs/publisher-brno-weather.client.key
+    relabel: z
+  publisher-crypto-client-key:
+    file: certs/publisher-crypto.client.key
+    relabel: z
