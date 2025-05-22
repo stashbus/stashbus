@@ -16,7 +16,7 @@ from stashrest.serializers import (
     UserSerializer,
 )
 from stashrest.mongo import brno_weather, btc_prices
-from stashrest.models import OWMPayload, Message, DataProducer
+from stashrest.models import OWMPayload, Quote, DataProducer
 
 from typing import Dict, List, Any
 
@@ -102,7 +102,7 @@ class BTCPriceListView(APIView):
 
         for doc in cursor:
             doc["_id"] = str(doc["_id"])  # Convert ObjectId
-            entry = Message(**doc)
+            entry = Quote(**doc)
             results.append(entry.model_dump())
 
         return Response(results)

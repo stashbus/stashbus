@@ -115,8 +115,6 @@ services:
                '--mqtt_certfile', '/publisher-crypto.client.crt',
                '--mqtt_keyfile', '/run/secrets/publisher-crypto-client-key',
                'cryptocurrency' ]
-    build:
-      target:  stashbus_mqtt_publisher
     volumes:
       - .:/src/stashbus:ro,z
       - ./certs/ca.sscrt:/ca.sscrt:ro,z
@@ -144,6 +142,73 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+
+
+
+  modbus-server:
+    build:
+      target: stashbus_modbus
+    image: stashbus_modbus
+    expose:
+      - "502"
+    volumes:
+      - .:/src/stashbus:ro,z
+    networks:
+      - secure_net
+    command: [ server ]
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z $(hostname -i) 502"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  stunnel-server:
+    build:
+      target: stunnel-server
+    depends_on:
+      - modbus-server
+    ports:
+      - "1502:1502"
+    networks:
+      - secure_net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z $(hostname -i) 1502"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  stunnel-client:
+    build:
+      target: stunnel-client
+    depends_on:
+      - stunnel-server
+    expose:
+      - "502"
+    networks:
+      - secure_net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z $(hostname -i) 502"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  modbus-client:
+    image: stashbus_modbus
+    depends_on:
+      - stunnel-client
+    volumes:
+      - .:/src/stashbus:ro,z
+    environment:
+      MODBUS_HOST: stunnel-client
+      MODBUS_PORT: 502
+    command: [ client ]
+    networks:
+      - secure_net
+
+
+networks:
+  secure_net:
 
 secrets:
   postgres-passwd:

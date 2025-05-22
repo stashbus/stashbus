@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../stashbus_deploy"
+		},
+		{
+			"path": "../pymodbus"
 		}
 	],
 	"settings": {}

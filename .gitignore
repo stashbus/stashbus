@@ -178,3 +178,4 @@ certs/*.crt
 certs/*.sscrt
 data
 secrets
+*.pem

@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from decimal import Decimal
 from enum import StrEnum, auto
 from datetime import datetime
 from typing import Optional, Any
@@ -11,20 +10,20 @@ class Currency(StrEnum):
 
 
 class Price(BaseModel):
-    USD: Decimal
-    EUR: Decimal
-    GBP: Decimal
-    CAD: Decimal
-    CHF: Decimal
-    AUD: Decimal
-    JPY: Decimal
+    USD: float | None = Field(default=None)
+    EUR: float | None = Field(default=None)
+    GBP: float | None = Field(default=None)
+    CAD: float | None = Field(default=None)
+    CHF: float | None = Field(default=None)
+    AUD: float | None = Field(default=None)
+    JPY: float | None = Field(default=None)
 
 
 class Payload(BaseModel):
     received_at: datetime
 
 
-class Message(Payload):
+class Quote(Payload):
     id: Optional[str] = Field(alias="_id", default=None)  # Mongo ObjectId as string
     price: Price
 

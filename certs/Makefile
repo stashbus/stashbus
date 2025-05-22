@@ -3,6 +3,7 @@ all: ca.sscrt \
      stasher-mqtt.client.key stasher-mqtt.client.crt \
 	 publisher-crypto.client.key publisher-crypto.client.crt \
 	 publisher-brno-weather.client.key publisher-brno-weather.client.crt
+	 stunnel.pem
 
 %.key:
 	openssl genrsa -out $@ 4096
@@ -25,6 +26,10 @@ all: ca.sscrt \
 %.client.crt: %.client.csr %.client.cnf ca.sscrt ca.key
 	openssl x509 -req -in $< -CA ca.sscrt -CAkey ca.key -out $@ -CAcreateserial -days 365 -sha256 -extfile $*.client.cnf
 
+stunnel.pem:
+	openssl req -new -x509 -days 365 -nodes \
+	  -out stunnel.pem -keyout stunnel.pem \
+	  -subj "/C=US/ST=State/L=City/O=Org/OU=Modbus/CN=modbus-secure"
 
 # Cleanup
 clean:
@@ -32,3 +37,4 @@ clean:
 	# podman compose up is creating the mountpoints as directories if they do not exist already, making
 	# the environment unclean for make to run.
 	-rmdir *.crt *.sscrt
+	-rm stunnel.pem
