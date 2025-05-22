@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stashbus-mqtt-publisher"
+name = "stashbus.mqtt_publishers"
 version = "0.1.0"
 dependencies = [
-  "stashbus-db-models",
+  "stashbus.models",
   "pydantic >= 2.0",
   "httpx>=0.28.1",
   "paho-mqtt",
@@ -51,11 +51,11 @@ dev = [
 Homepage = "https://github.com/jarovo/stashbus/"
 Repository = "https://github.com/jarovo/stashbus_mqtt_publisher/"
 
-[tool.hatch.build.targets.wheel]
-packages = ["stashbus"]
-
 [tool.pytest.ini_options]
 #addopts = "--doctest-plus --doctest-modules --doctest-glob='*.md'"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stashbus"]
 
 [project.scripts]
 stashbus = "stashbus.mqtt_publishers.cli:stashbus"

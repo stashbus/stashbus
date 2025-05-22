@@ -1,11 +1,10 @@
 import click
-from stashbus.db_models import Currency
 from stashbus.http_common import (
-    CryptoCompareClient,
     OWMClient,
     StashRESTClient,
     Mempool,
 )
+
 from stashbus.mqtt_publishers import RESTPublisher
 
 BRNO_LAT_LON = 49.19522000, 16.60796000

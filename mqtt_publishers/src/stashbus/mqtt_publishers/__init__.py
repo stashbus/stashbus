@@ -1,5 +1,4 @@
-import httpx
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from typing import TypeVar, Generic, Any, Callable, Dict
 import paho.mqtt.client as mqtt
@@ -11,14 +10,12 @@ from dataclasses import field, dataclass
 from time import sleep
 import ssl
 import threading
-from stashbus.db_models import Payload
+from stashbus.models.mqtt_models import Payload
 from stashbus.http_common import (
-    StashbusError,
-    CryptoCompareClient,
     DataClient,
     StashRESTClient,
 )
-from stashbus.rest_models import DataProducer, Command
+from stashbus.models.rest_models import Command
 
 logging.basicConfig(level=logging.INFO)
 

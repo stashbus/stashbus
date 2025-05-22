@@ -1,14 +1,12 @@
 import asyncio
 import logging
-from stashbus.http_common import CryptoCompareClient, StashRESTClient, Mempool
-from stashbus.db_models import Currency
-
+from stashbus.http_common import Mempool
 from pymodbus.datastore import (
     ModbusServerContext,
     ModbusSequentialDataBlock,
     ModbusSlaveContext,
 )
-
+from math import trunc
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -20,8 +18,6 @@ from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 from pymodbus.datastore.store import ModbusSequentialDataBlock
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.client.base import ModbusBaseClient
-
-import logging
 
 
 # Enable debug logging
@@ -69,17 +65,15 @@ async def updating_task(context: ModbusServerContext, mempool: Mempool):
 
     # incrementing loop
     while True:
-        try:
-            message = await mempool.aget_data()
-        except Exception as e:
-            _logger.warning(f"Failed to fetch or update mempool data: {e}")
-        else:
-            values = ModbusBaseClient.convert_to_registers(
-                int(message.price.USD), ModbusBaseClient.DATATYPE.INT32
-            )
-            context[device_id].setValues(fc_as_hex, address, values)
-            txt = f"updating_task set vals: {values!s} at address {address!s}"
-            _logger.debug(txt)
+        message = await mempool.aget_data()
+        assert message.price.USD is not None
+        values = ModbusBaseClient.convert_to_registers(
+            int(message.price.USD), ModbusBaseClient.DATATYPE.INT32
+        )
+        _logger.info("info %s", values)
+        context[device_id].setValues(fc_as_hex, address, values)
+        txt = f"updating_task set vals: {values!s} at address {address!s}"
+        _logger.debug(txt)
         await asyncio.sleep(30)
 
 

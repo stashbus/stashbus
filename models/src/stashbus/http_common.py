@@ -1,16 +1,21 @@
 import asyncio
 from abc import abstractmethod
 import httpx
-from stashbus.db_models import Payload, Quote, OWMPayload, OpenWeatherResponse, Price
+from stashbus.models.mqtt_models import (
+    Payload,
+    Quote,
+    OWMPayload,
+    OpenWeatherResponse,
+    Price,
+)
 from typing import TypeVar, Generic, Type
 from enum import StrEnum
 from dataclasses import field, dataclass
 import urllib.parse
 from datetime import datetime
-from stashbus.rest_models import DataProducer, Command, Secret, MempoolResponse
+from stashbus.models.rest_models import DataProducer, Command, Secret, MempoolResponse
 import logging
 from pydantic import ValidationError
-from decimal import Decimal
 
 
 logging.basicConfig(level=logging.INFO)
@@ -117,7 +122,7 @@ class CryptoCompareClient(DataClient[Quote]):
             message = self.model_class(received_at=datetime.now(), price=price)
             return message
         except ValidationError:
-            logging.error(f"Got invalid data: {data}.")
+            logging.error(f"Ghttp_commonot invalid data: {data}.")
             raise
 
     @property
@@ -168,20 +173,24 @@ class OWMClient(DataClient[OWMPayload]):
 class StashRESTClient:
     producer_id: int = field()
     stashrest_url: str = field()
-    http_cli = httpx.Client()
+    http_cli = httpx.AsyncClient()
 
     def current_command(self) -> Command:
-        return DataProducer.model_validate_json(
-            self.http_cli.get(
-                f"{self.stashrest_url}/data_producers/{self.producer_id}/"
-            ).text
-        ).command
+        return asyncio.run(self.aiocurrent_command())
 
     def secret(self, name: str) -> str:
+        return asyncio.run(self.aiosecret(name))
+
+    async def aiocurrent_command(self) -> Command:
+        req = await self.http_cli.get(
+            f"{self.stashrest_url}/data_producers/{self.producer_id}/"
+        )
+        return DataProducer.model_validate_json(req.text).command
+
+    async def aiosecret(self, name: str) -> str:
         try:
-            return Secret.model_validate_json(
-                self.http_cli.get(f"{self.stashrest_url}/secrets/{name}/").text
-            ).value
+            request = await self.http_cli.get(f"{self.stashrest_url}/secrets/{name}/")
+            return Secret.model_validate_json(request.text).value
         except httpx.HTTPError as error:
             logging.error(
                 f"Error while retrieving secret {name}: {error}. Will attempt getting the file-based secret."

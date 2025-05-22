@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from enum import StrEnum, auto
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional
 
 
 class Currency(StrEnum):

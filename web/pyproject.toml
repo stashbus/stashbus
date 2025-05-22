@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stashbus-web"
+name = "stashbus_web"
 version = "0.1.0"
 dependencies = [
   "pydantic >= 2.0",
@@ -15,7 +15,7 @@ dependencies = [
   "markdown",
   "django-filter",
   "psycopg2-binary",
-  "stashbus-db-models",
+  "stashbus.models",
   "pymongo==4.13.0",
   "mongoengine==0.29.1"
 
@@ -60,8 +60,10 @@ Homepage = "https://github.com/jarovo/stashbus/"
 Repository = "https://github.com/jarovo/stashbus_mqtt_publisher/"
 
 [tool.hatch.build.targets.wheel]
-packages = ["stashbus"]
+packages = ["src/stashbus"]
 
+[project.packages]
+include = ["stashbus.stashbus_web", "stashbus.stashrest" ]
 
 [tool.pytest.ini_options]
 #addopts = "--doctest-plus --doctest-modules --doctest-glob='*.md'"

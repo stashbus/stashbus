@@ -3,15 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stashbus-modbuscomm"
+name = "stashbus.modbus"
 version = "0.1.0"
 dependencies = [
   "pydantic >= 2.0",
-  "pymongo",
+  "motor",
   "paho-mqtt",
   "click>=8.2.0",
   "pymodbus",
-  "stashbus-db-models",
+  "stashbus.models",
   "httpx"
 ]
 requires-python = ">=3.12"
@@ -50,11 +50,11 @@ dev = [
 Homepage = "https://github.com/jarovo/stashbus"
 Repository = "https://github.com/jarovo/stashbus_mqtt_stasher"
 
-[tool.hatch.build.targets.wheel]
-packages = ["stashbus"]
-
 [tool.pytest.ini_options]
 #addopts = "--doctest-plus --doctest-modules --doctest-glob='*.md'"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stashbus"]
 
 [project.scripts]
 stashbus-modbus = "stashbus.modbus:cli"

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stashbus-mqtt-stasher"
+name = "stashbus.mqtt_stasher"
 version = "0.1.0"
 dependencies = [
   "pydantic >= 2.0",
@@ -48,8 +48,9 @@ dev = [
 Homepage = "https://github.com/jarovo/stashbus"
 Repository = "https://github.com/jarovo/stashbus_mqtt_stasher"
 
+
 [tool.hatch.build.targets.wheel]
-packages = ["stashbus"]
+packages = ["src/stashbus"]
 
 [tool.pytest.ini_options]
 #addopts = "--doctest-plus --doctest-modules --doctest-glob='*.md'"

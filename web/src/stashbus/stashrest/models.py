@@ -1,6 +1,6 @@
 from django.db import models
 import mongoengine as me
-from stashbus.db_models import OWMPayload, Quote
+from stashbus.models.mqtt_models import OWMPayload, Quote
 
 
 class DataProducer(models.Model):
