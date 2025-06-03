@@ -2,11 +2,12 @@ all: ca.sscrt \
      mosquitto.server.key mosquitto.server.crt \
      stasher-mqtt.client.key stasher-mqtt.client.crt \
 	 publisher-crypto.client.key publisher-crypto.client.crt \
-	 publisher-brno-weather.client.key publisher-brno-weather.client.crt
+	 publisher-brno-weather.client.key publisher-brno-weather.client.crt \
 	 stunnel.pem
 
 %.key:
 	openssl genrsa -out $@ 4096
+
 
 # CA self-signed certs generation.
 %.sscrt: %.key %.answ
@@ -28,7 +29,7 @@ all: ca.sscrt \
 
 stunnel.pem:
 	openssl req -new -x509 -days 365 -nodes \
-	  -out stunnel.pem -keyout stunnel.pem \
+	  -out $@ -keyout $@ \
 	  -subj "/C=US/ST=State/L=City/O=Org/OU=Modbus/CN=modbus-secure"
 
 # Cleanup
