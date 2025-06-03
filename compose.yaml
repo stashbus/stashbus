@@ -220,16 +220,16 @@ networks:
 secrets:
   postgres-passwd:
     file: secrets/postgres-passwd.txt
-    x-podman.relabel: private
+    x-podman.relabel: z
   mosquitto-server-key:
     file: certs/mosquitto.server.key
-    x-podman.relabel: private
+    x-podman.relabel: z
   stasher-mqtt-client-key:
     file: certs/stasher-mqtt.client.key
-    x-podman.relabel: private
+    x-podman.relabel: z
   publisher-brno-weather-client-key:
     file: certs/publisher-brno-weather.client.key
-    x-podman.relabel: private
+    x-podman.relabel: z
   publisher-crypto-client-key:
     file: certs/publisher-crypto.client.key
-    x-podman.relabel: private
+    x-podman.relabel: z
